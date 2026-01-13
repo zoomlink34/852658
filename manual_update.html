@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MANUAL MAP UPDATE | CEO TOOL</title>
+    <style>
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: #f0f2f5; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        .container { 
+            background: #fff; 
+            padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            width: 350px; 
+            text-align: center;
+            border: 2px solid #000;
+        }
+        h2 { color: #333; margin-bottom: 20px; text-transform: uppercase; font-size: 20px; }
+        input { 
+            width: 90%; 
+            padding: 12px; 
+            margin: 8px 0; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            outline: none;
+            font-size: 14px;
+        }
+        input:focus { border-color: #000; }
+        .update-btn { 
+            width: 100%; 
+            padding: 15px; 
+            background: #000; 
+            color: #fff; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            margin-top: 15px;
+            transition: 0.3s;
+        }
+        .update-btn:hover { background: #333; }
+        .footer-text { font-size: 11px; color: #888; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Manual Plot Loader</h2>
+        <p style="font-size: 13px; color: #666;">Use this to force-update any plot on the wall.</p>
+        
+        <input type="text" id="m_name" placeholder="Brand Name">
+        <input type="text" id="m_img" placeholder="Direct Image Link (from ImgBB)">
+        <input type="text" id="m_link" placeholder="Target Website URL">
+        <input type="number" id="m_id" placeholder="Assign Plot ID (1-10000)">
+        
+        <button onclick="manualUp()" class="update-btn">PUBLISH TO MAP</button>
+        
+        <p class="footer-text">The10KLegacyWall CEO Tool v2.0</p>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    
+    <script>
+        // আপনার ফায়ারবেস কনফিগ
+        const firebaseConfig = {
+            databaseURL: "https://m-legacy-5cf2b-default-rtdb.firebaseio.com/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function manualUp() {
+            const name = document.getElementById('m_name').value;
+            const img = document.getElementById('m_img').value;
+            const link = document.getElementById('m_link').value;
+            const pID = parseInt(document.getElementById('m_id').value);
+
+            // ভ্যালিডেশন
+            if(!img || !pID) {
+                return alert("Image Link and Plot ID are mandatory!");
+            }
+            if(pID < 1 || pID > 10000) {
+                return alert("Plot ID must be between 1 and 10000");
+            }
+
+            // গ্রিড পজিশন ক্যালকুলেশন (১০০ কলামের জন্য)
+            const x = ((pID - 1) % 100) * 60;
+            const y = Math.floor((pID - 1) / 100) * 40;
+            
+            // ডাটাবেসে সেভ করা
+            const entryID = "manual_" + Date.now();
+            db.ref('pixels/' + entryID).set({
+                name: name,
+                imageUrl: img,
+                link: link,
+                x: x,
+                y: y,
+                plotID: pID
+            })
+            .then(() => {
+                alert("SUCCESS! Plot #" + pID + " is now live on the wall.");
+                // ইনপুট ফিল্ড ক্লিয়ার করা
+                document.getElementById('m_name').value = "";
+                document.getElementById('m_img').value = "";
+                document.getElementById('m_link').value = "";
+                document.getElementById('m_id').value = "";
+            })
+            .catch((error) => {
+                alert("Error: " + error.message);
+            });
+        }
+    </script>
+</body>
+</html>
